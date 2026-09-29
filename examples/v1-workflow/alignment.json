@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "canonical": "customer_level",
+      "aliases": ["customer_tier"]
+    }
+  ]
+}

@@ -4,3 +4,8 @@ build/
 dist/
 *.egg-info/
 examples/*/out/
+examples/*/*.generated.json
+examples/*/*.generated.jsonl
+examples/*/*.generated.md
+examples/*/*.generated.jsonl.lock
+examples/*/.reproforge/

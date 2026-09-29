@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "users": {
+    "demo-reviewer": "reviewer",
+    "demo-viewer": "viewer"
+  },
+  "roles": {
+    "reviewer": ["confirm", "reject", "expire"],
+    "viewer": []
+  },
+  "require_hmac": false
+}

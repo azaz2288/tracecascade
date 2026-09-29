@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "title": "Replace customer levels with a continuous score",
+  "changes": [
+    {
+      "node": "customer_level",
+      "operation": "replace",
+      "description": "Replace named levels with a score from 0 to 100."
+    }
+  ]
+}

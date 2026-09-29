@@ -18,6 +18,51 @@ def _classification(score: float, confirmed: bool) -> str:
     return "review-required"
 
 
+class _Path:
+    """Persistent path used to avoid quadratic tuple copies on deep graphs."""
+
+    __slots__ = ("score", "parent", "edge", "origin", "node", "depth")
+
+    def __init__(self, score: float, parent: _Path | None, edge: Edge | None,
+                 origin: str, node: str) -> None:
+        self.score = score
+        self.parent = parent
+        self.edge = edge
+        self.origin = origin
+        self.node = node
+        self.depth = 0 if parent is None else parent.depth + 1
+
+    def edge_ids(self) -> list[str]:
+        result = []
+        current: _Path | None = self
+        while current is not None and current.edge is not None:
+            result.append(current.edge.id)
+            current = current.parent
+        result.reverse()
+        return result
+
+    def edges(self) -> list[Edge]:
+        result = []
+        current: _Path | None = self
+        while current is not None and current.edge is not None:
+            result.append(current.edge)
+            current = current.parent
+        result.reverse()
+        return result
+
+
+class _PathOrder:
+    """Heap key: lexicographic edge IDs, then origin, without retaining copied tuples."""
+
+    __slots__ = ("path",)
+
+    def __init__(self, path: _Path) -> None:
+        self.path = path
+
+    def __lt__(self, other: _PathOrder) -> bool:
+        return (self.path.edge_ids(), self.path.origin) < (other.path.edge_ids(), other.path.origin)
+
+
 def simulate(graph: Graph, scenario: Scenario, max_depth: int | None = None) -> dict[str, Any]:
     """Find the strongest explainable path from any changed node to every reachable node."""
     if max_depth is not None and (type(max_depth) is not int or max_depth < 0):
@@ -29,39 +74,35 @@ def simulate(graph: Graph, scenario: Scenario, max_depth: int | None = None) -> 
     for edges in outgoing.values():
         edges.sort(key=lambda edge: (edge.target, edge.id))
     depth_limit = min(max_depth if max_depth is not None else max(len(nodes) - 1, 0), max(len(nodes) - 1, 0))
-    best: dict[str, tuple[float, tuple[str, ...], tuple[Edge, ...], str]] = {}
-    queue: list[tuple[float, tuple[str, ...], str, tuple[str, ...], tuple[Edge, ...], str]] = []
+    best: dict[str, _Path] = {}
+    queue: list[tuple[float, _PathOrder, str, _Path]] = []
     changed = {change.node for change in scenario.changes}
     for change in sorted(scenario.changes, key=lambda item: item.node):
-        heapq.heappush(queue, (-1.0, (change.node,), change.node, (), (), change.node))
+        path = _Path(1.0, None, None, change.node, change.node)
+        heapq.heappush(queue, (-1.0, _PathOrder(path), change.node, path))
     while queue:
-        negative_score, path_nodes, current, queued_signature, path_edges, origin = heapq.heappop(queue)
-        score = -negative_score
-        current_best = best.get(current)
-        if current not in changed and current_best is not None and (score, queued_signature) != (current_best[0], current_best[1]):
+        _, _, current, path = heapq.heappop(queue)
+        if current in best:
+            continue
+        best[current] = path
+        if path.depth >= depth_limit:
             continue
         for edge in outgoing[current]:
-            if edge.target in path_nodes or len(path_edges) >= depth_limit:
+            if edge.target in best or edge.target in changed:
                 continue
-            new_score = score * edge.confidence
-            new_nodes = (*path_nodes, edge.target)
-            new_edges = (*path_edges, edge)
-            signature = tuple(item.id for item in new_edges)
-            prior = best.get(edge.target)
-            if prior is not None and (new_score < prior[0] or (new_score == prior[0] and signature >= prior[1])):
-                continue
-            best[edge.target] = (new_score, signature, new_edges, origin)
-            heapq.heappush(queue, (-new_score, new_nodes, edge.target, signature, new_edges, origin))
+            candidate = _Path(path.score * edge.confidence, path, edge, path.origin, edge.target)
+            heapq.heappush(queue, (-candidate.score, _PathOrder(candidate), edge.target, candidate))
     impacts = []
-    for node_id, (score, _, path_edges, origin) in best.items():
+    for node_id, path in best.items():
         if node_id in changed:
             continue
+        path_edges = path.edges()
         confirmed = all(edge.status == "confirmed" for edge in path_edges)
         impacts.append({
             "node": asdict(nodes[node_id]),
-            "origin": origin,
-            "score": round(score, 6),
-            "classification": _classification(score, confirmed),
+            "origin": path.origin,
+            "score": round(path.score, 6),
+            "classification": _classification(path.score, confirmed),
             "all_relations_confirmed": confirmed,
             "depth": len(path_edges),
             "path": [{"edge": edge.id, "from": edge.source, "to": edge.target,

@@ -1,54 +1,84 @@
 # TraceCascade
 
-TraceCascade is a local-first change-impact simulator. It answers a practical question before a team changes a contract, data field, workflow or API: **what else can break, and what evidence supports that conclusion?**
+TraceCascade is a local-first, evidence-backed change-impact simulator. Before a team changes a contract, field, workflow, module or API, it answers: **what else can break, why, and what should be checked next?**
 
-Unlike a document search tool, TraceCascade works on a directed dependency graph. Every relation carries a source file, exact quote, line range, optional source hash, confidence and `confirmed`/`inferred` status. A what-if scenario propagates through that graph and produces a deterministic JSON report plus a readable evidence path for every affected item.
+Version 1.0 is a complete local/small-team workflow—not a hosted SaaS. It combines strict evidence graphs, deterministic impact propagation, reversible entity alignment, graph/report diffs, role-gated human review, tamper-evident audit logs, read-only source connectors, encrypted recovery, and executable ReproForge plans.
 
-This repository currently delivers **R0**, the first vertical slice. The larger [project plan](PROJECT_PLAN.md) includes ingestion, version comparison, human review, connectors and multi-user security; those later stages are not claimed complete.
+## Why it is useful
 
-## Try it
+- Make hidden downstream dependencies visible before a change ships.
+- Preserve the exact quote, source range and optional source hash behind every relation.
+- Separate confirmed impact, likely impact and review-required conclusions.
+- Turn uncertain relations into explicit human decisions without mutating the source graph.
+- Export affected work as a validated execution DAG instead of a loose checklist.
+
+## Install and test
+
+Requires Python 3.12 or newer.
 
 ```sh
-python -m tracecascade validate examples/customer-tier/graph.json --scenario examples/customer-tier/scenario.json
-python -m tracecascade verify-evidence examples/customer-tier/graph.json
-python -m tracecascade simulate examples/customer-tier/graph.json examples/customer-tier/scenario.json \
-  --json-out examples/customer-tier/out/report.json \
-  --markdown-out examples/customer-tier/out/report.md
+python -m pip install .
 python -m unittest discover -s tests -v
+tracecascade --help
 ```
 
-The example asks what happens if a three-tier CRM field becomes a 0–100 score. TraceCascade identifies the discount job, revenue dashboard and renewal commitment as confirmed impacts, then marks the account playbook as likely because that last relation is inferred. The graph intentionally contains a cycle; propagation still terminates.
+The test suite covers validation, evidence drift, cycles, deterministic path selection, ingestion conflicts, alignment/undo, diffs, concurrent audit writers, permissions, HMAC tamper detection, CSRF defenses, connector bounds, ReproForge export and encrypted recovery.
 
-## Graph format
+## Five-minute workflow
 
-The version-1 graph contains `nodes` and `edges`. Node IDs, kinds and edge relations use stable lowercase identifiers. Each edge requires:
+The complete example is in `examples/v1-workflow`:
 
-```json
-{
-  "id": "tier_to_discount",
-  "from": "customer_tier",
-  "to": "discount_job",
-  "relation": "configures",
-  "status": "confirmed",
-  "confidence": 1.0,
-  "evidence": {
-    "source": "docs/architecture.md",
-    "quote": "discount job reads customer_tier",
-    "line_start": 3,
-    "line_end": 3,
-    "sha256": "optional-lowercase-source-digest"
-  }
-}
+```sh
+tracecascade ingest examples/v1-workflow/source.md \
+  --out examples/v1-workflow/graph.generated.json
+tracecascade verify-evidence examples/v1-workflow/graph.generated.json
+tracecascade align examples/v1-workflow/graph.generated.json \
+  examples/v1-workflow/alignment.json \
+  --out examples/v1-workflow/aligned.generated.json \
+  --ledger examples/v1-workflow/alignment-ledger.generated.json
+tracecascade simulate examples/v1-workflow/aligned.generated.json \
+  examples/v1-workflow/scenario.json \
+  --json-out examples/v1-workflow/report.generated.json \
+  --markdown-out examples/v1-workflow/report.generated.md
+tracecascade serve-review examples/v1-workflow/aligned.generated.json \
+  --actor demo-reviewer --policy examples/v1-workflow/review-policy.json \
+  --log examples/v1-workflow/reviews.generated.jsonl
+tracecascade export-reproforge examples/v1-workflow/report.generated.json \
+  examples/v1-workflow/reproforge-mapping.json \
+  --out examples/v1-workflow/reproforge.generated.json
 ```
 
-Evidence paths are relative to the graph file and cannot traverse upward or pass through symbolic links. `verify-evidence` confirms the optional SHA-256 and ensures the quote exists in the declared line range. `simulate` refuses to run on failed evidence.
+Open the loopback URL printed by `serve-review`; it never binds to a public interface. See [OPERATIONS.md](OPERATIONS.md) for signed audit logs, encrypted backup/restore and benchmark guidance.
 
-## Impact semantics
+## Inputs and connectors
 
-The engine selects the strongest path from any changed node, multiplying edge confidence along the path. It never revisits a node within a path and bounds depth to the number of nodes, so cyclic graphs terminate. Equal paths use stable edge-ID ordering.
+`ingest` merges version-1 JSON graphs, CSV rows and Markdown directives. Conflicting IDs fail closed. Markdown uses:
+
+```text
+@node id kind | title | description
+@edge id from relation to status confidence | literal evidence quote
+```
+
+`scan-python` builds a local module dependency graph from Python ASTs. `snapshot-github` makes bounded, GET-only UTF-8 snapshots of `.py`, `.md`, `.json` and `.csv` files; it never requests remote write access. Snapshot first, then ingest or scan locally.
+
+## Graph and impact semantics
+
+Every edge requires `from`, `to`, relation, `confirmed`/`inferred` status, confidence and evidence. Evidence paths are relative POSIX paths and cannot traverse upward or pass through symlinks. `verify-evidence` checks line ranges, quotes and optional SHA-256 digests; `simulate` refuses failed evidence.
+
+The engine chooses the strongest simple path from any changed node, multiplying edge confidence. Cycles terminate, depth is bounded and equal paths use stable edge-ID ordering:
 
 - `confirmed-impact`: every relation is confirmed and cumulative confidence is at least 0.8.
-- `likely-impact`: cumulative confidence is at least 0.5, but the path contains uncertainty or falls below the confirmed threshold.
-- `review-required`: cumulative confidence is below 0.5.
+- `likely-impact`: confidence is at least 0.5 with some uncertainty.
+- `review-required`: confidence is below 0.5.
 
-These labels rank declared relationships; they do not prove real-world causality. Incorrect or incomplete graphs produce incomplete conclusions. R0 is read-only and does not modify external systems.
+These are rankings of declared relations, not proof of causality. An incomplete graph produces incomplete conclusions.
+
+## Review, audit and recovery
+
+Review actions are `confirm`, `reject` and `expire`. A policy maps actors to roles and actions. Events are append-only JSONL with a SHA-256 chain; set `require_hmac: true` and provide `TRACECASCADE_AUDIT_KEY` to authenticate them. `apply-reviews` creates a new graph and requires the same policy used to verify the log.
+
+Encrypted backups use AES-256-GCM and scrypt. The password is read only from `TRACECASCADE_BACKUP_PASSWORD`. Unsafe paths, symlinks, oversized archives, nonempty restore targets and modified ciphertext are rejected.
+
+## Honest boundary
+
+TraceCascade does not prove causality, replace legal/security judgment, execute untrusted code, or provide hosted multi-tenant identity and operations. Its completed 1.0 boundary is a secure, auditable local/small-team product. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the delivered architecture and possible future work.

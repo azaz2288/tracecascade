@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "tasks": {
+    "pricing_job": {
+      "command": ["@python", "-c", "from pathlib import Path; Path('pricing.checked').write_text('checked')"],
+      "inputs": [],
+      "outputs": ["pricing.checked"],
+      "timeout_seconds": 30,
+      "cache": true
+    },
+    "offer_dashboard": {
+      "command": ["@python", "-c", "from pathlib import Path; Path('dashboard.checked').write_text('checked')"],
+      "inputs": [
+        {
+          "task": "pricing_job",
+          "artifact": "pricing.checked",
+          "as": "pricing.checked"
+        }
+      ],
+      "outputs": ["dashboard.checked"],
+      "timeout_seconds": 30,
+      "cache": true
+    }
+  }
+}

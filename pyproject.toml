@@ -4,12 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tracecascade"
-version = "0.1.0"
+version = "1.0.0"
 description = "Evidence-backed change-impact simulation"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 authors = [{name = "azaz2288"}]
+dependencies = ["cryptography>=43"]
 
 [project.scripts]
 tracecascade = "tracecascade.__main__:main"
