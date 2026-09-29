@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "title": "Replace the customer tier definition",
+  "changes": [
+    {"node": "customer_tier", "operation": "replace", "description": "Replace three CRM tiers with a score from 0 to 100."}
+  ]
+}

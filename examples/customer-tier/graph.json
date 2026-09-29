@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "nodes": [
+    {"id": "customer_tier", "kind": "data-field", "title": "Customer tier", "description": "CRM field that selects pricing and service treatment."},
+    {"id": "discount_job", "kind": "pipeline", "title": "Discount calculation job", "description": "Transforms orders using the tier-specific schedule."},
+    {"id": "revenue_dashboard", "kind": "dashboard", "title": "Revenue dashboard", "description": "Management dashboard for discounted revenue and forecast."},
+    {"id": "renewal_commitment", "kind": "business-rule", "title": "Renewal commitment", "description": "Weekly renewal target used by account management."},
+    {"id": "account_playbook", "kind": "procedure", "title": "Account playbook", "description": "Outreach priorities for account managers."}
+  ],
+  "edges": [
+    {"id": "tier_to_discount", "from": "customer_tier", "to": "discount_job", "relation": "configures", "status": "confirmed", "confidence": 1.0, "evidence": {"source": "docs/architecture.md", "quote": "discount job reads customer_tier", "line_start": 3, "line_end": 3, "sha256": "d0746740b04f3414c9a9d8a3bd471d5d6375421382d1bf3f9095fea74d164878"}},
+    {"id": "discount_to_dashboard", "from": "discount_job", "to": "revenue_dashboard", "relation": "feeds", "status": "confirmed", "confidence": 1.0, "evidence": {"source": "docs/architecture.md", "quote": "revenue dashboard consumes discounted order values", "line_start": 4, "line_end": 4, "sha256": "d0746740b04f3414c9a9d8a3bd471d5d6375421382d1bf3f9095fea74d164878"}},
+    {"id": "dashboard_to_commitment", "from": "revenue_dashboard", "to": "renewal_commitment", "relation": "validates", "status": "confirmed", "confidence": 0.9, "evidence": {"source": "docs/architecture.md", "quote": "renewal commitment is reviewed against the revenue dashboard", "line_start": 5, "line_end": 5, "sha256": "d0746740b04f3414c9a9d8a3bd471d5d6375421382d1bf3f9095fea74d164878"}},
+    {"id": "commitment_to_playbook", "from": "renewal_commitment", "to": "account_playbook", "relation": "prioritizes", "status": "inferred", "confidence": 0.7, "evidence": {"source": "docs/architecture.md", "quote": "account playbook uses the renewal commitment", "line_start": 6, "line_end": 6, "sha256": "d0746740b04f3414c9a9d8a3bd471d5d6375421382d1bf3f9095fea74d164878"}},
+    {"id": "playbook_to_dashboard", "from": "account_playbook", "to": "revenue_dashboard", "relation": "forecasts", "status": "confirmed", "confidence": 0.8, "evidence": {"source": "docs/architecture.md", "quote": "revenue dashboard also includes the outreach forecast", "line_start": 7, "line_end": 7, "sha256": "d0746740b04f3414c9a9d8a3bd471d5d6375421382d1bf3f9095fea74d164878"}}
+  ]
+}
