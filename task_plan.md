@@ -36,3 +36,4 @@ R0 release verification and public repository setup.
 |---|---:|---|
 | None yet | 1 | — |
 | `git status` reported this new directory is not a repository | 1 | Expected before R0 review; initialize Git only after tests, docs and package verification. |
+| First CI passed Ubuntu but Windows failed pinned evidence verification | 1 | Git line-ending conversion changed source bytes; add `.gitattributes` to enforce LF for cross-platform evidence hashes, then rerun CI. |
