@@ -8,3 +8,4 @@
 - Hardened output safety (cannot overwrite graph/scenario/evidence), rejected boolean schema versions and negative depth, and covered parallel equal edges. 10 local tests pass; source compiles.
 - Built `tracecascade-0.1.0-py3-none-any.whl`, installed it into a clean virtual environment and verified the installed console command/import from outside the repository. Public Git/CI release is pending.
 - Published public repository at https://github.com/azaz2288/tracecascade. First CI run 36628396269 passed Ubuntu but exposed a real cross-platform issue: Windows line-ending conversion invalidated the pinned evidence hash. Added repository line-ending policy; replacement CI pending.
+- Commit `48021d03ccd54b3cb96bedc9e4a899806e892cf4` passed Windows/Ubuntu CI run 36628662783. R0 is now a public, installable and cross-platform-verified vertical slice; R1–R5 remain roadmap work.

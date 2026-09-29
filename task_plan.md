@@ -4,10 +4,10 @@
 Build a local-first change-impact simulator that turns evidence-backed dependency graphs into explainable, auditable what-if reports.
 
 ## Current phase
-R0 release verification and public repository setup.
+R0 released and cross-platform verified. R1 ingestion/entity-alignment design is next.
 
 ## Phases
-- R0 core graph and impact engine: complete locally; publication/CI pending.
+- R0 core graph and impact engine: complete and publicly released; Windows/Linux CI passed.
 - R1 document/CSV/JSON ingestion and reversible entity alignment: pending.
 - R2 version diff and scenario comparison: pending.
 - R3 human review workbench: pending.
