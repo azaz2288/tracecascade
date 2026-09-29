@@ -14,3 +14,4 @@
 - Executed the complete example from Markdown ingestion through review application and ReproForge export; the resulting two-task plan validated and ran successfully in the local ReproForge checkout.
 - Recorded scale observations: 10,000-node fan-out in 0.924 seconds / 13,649,246 traced bytes; 1,000-node deep chain in 5.833 seconds / 233,143,644 traced bytes, with the full-path output-size limitation documented.
 - Built `tracecascade-1.0.0-py3-none-any.whl`, installed it with dependencies into a fresh virtual environment, verified metadata with `pip check`, imported it from `site-packages`, and exercised every local CLI workflow from outside the source tree (including exact undo, diffs, review application, source scan and encrypted recovery).
+- Published complete v1 commit `fd8bded9aa78d5fd9fac1143fd431c45fdfb8afd`; GitHub Actions run 36634399038 passed the full suite, benchmark, package build and installed-CLI smoke test on both Windows and Ubuntu.

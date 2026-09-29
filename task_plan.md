@@ -4,7 +4,7 @@
 Build a local-first change-impact simulator that turns evidence-backed dependency graphs into explainable, auditable what-if reports.
 
 ## Current phase
-Complete-v1 acceptance and public release. Implementation, local acceptance and clean wheel installation are complete; GitHub CI remains before the release is declared public.
+Complete-v1 public release. Implementation, local acceptance, clean wheel installation and Windows/Linux GitHub CI are complete.
 
 ## Phases
 - R0 core graph and impact engine: complete and publicly released; Windows/Linux CI passed.
