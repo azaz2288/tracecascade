@@ -1,5 +1,11 @@
 # Progress
 
+## 2026-10-06 — v1.0.1 encrypted recovery hardening
+- Crafted authenticated synthetic ZIPs reproduced17 failing boundary assertions and3 unhandled malformed-type errors across5 new methods before implementation. Encryption authentication does not make archive path data safe.
+- Strict raw ZIP names, portable paths, special modes, case collisions including directories and file-parent conflicts checked before destination creation. Envelope field types/salt/nonce lengths, file-count and expansion limits checked. Refuse symlink/junction source roots/entries and restore targets.
+- Windows ZipInfo normalizes backslashes, so initial corrected run still missed that spelling: preserve raw test entry spelling and validate orig_filename. No unsafe fixture is taken from a user file.
+- Added entry-count/expansion and POSIX link tests; final cross-platform/package checks follow. Existing valid archive format remains version1; package1.0.1 does not promise atomic snapshots, malicious-race isolation or recovery of empty directories/metadata.
+
 ## 2026-09-30
 - Selected TraceCascade as the next flagship: an evidence-backed change-impact simulator.
 - Defined R0–R5 and R0 acceptance criteria. Implementation started; nothing beyond R0 is claimed complete.

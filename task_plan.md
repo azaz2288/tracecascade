@@ -6,6 +6,8 @@ Build a local-first change-impact simulator that turns evidence-backed dependenc
 ## Current phase
 Complete-v1 public release. Implementation, local acceptance, clean wheel installation and Windows/Linux GitHub CI are complete.
 
+2026-10-06 maintenance: v1.0.1 encrypted recovery path/type/collision preflight and Windows junction rejection implemented after failing real archive regressions. Final local tests/package/CI verification underway; do not confuse old v1.0 CI with this version.
+
 ## Phases
 - R0 core graph and impact engine: complete and publicly released; Windows/Linux CI passed.
 - R1 document/CSV/JSON ingestion and reversible entity alignment: complete.

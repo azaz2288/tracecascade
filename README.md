@@ -79,6 +79,8 @@ Review actions are `confirm`, `reject` and `expire`. A policy maps actors to rol
 
 Encrypted backups use AES-256-GCM and scrypt. The password is read only from `TRACECASCADE_BACKUP_PASSWORD`. Unsafe paths, symlinks, oversized archives, nonempty restore targets and modified ciphertext are rejected.
 
+v1.0.1 validates raw ZIP names before Windows normalization, rejects drive/stream/device/control paths, case-colliding directories and file-parent conflicts, and preflights100,000-file/100MB limits before creating a destination. Linked source roots/entries and linked restore targets (including Windows junctions) are refused. Valid old archives remain readable; nonportable archives previously accepted must be reviewed rather than normalized silently. This is not an atomic filesystem snapshot or a malicious concurrent-path sandbox; ancestor indirection is not hardened. An I/O error after extraction starts may leave a partial new/empty destination; inspect it before retrying, without assuming successful recovery.
+
 ## Honest boundary
 
 TraceCascade does not prove causality, replace legal/security judgment, execute untrusted code, or provide hosted multi-tenant identity and operations. Its completed 1.0 boundary is a secure, auditable local/small-team product. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the delivered architecture and possible future work.

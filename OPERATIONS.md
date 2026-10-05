@@ -19,6 +19,8 @@ Backups use a random salt, scrypt (`N=16384,r=8,p=1`) and AES-256-GCM. Passwords
 
 ## Review-log recovery
 
+Restore preflight in v1.0.1 checks original ZIP spelling (not only normalized names), portable path segments, case-insensitive collisions in parents/files, file-as-parent conflicts and special file modes. Envelope field types and salt/nonce lengths are checked; boolean versions are not accepted. Existing empty destinations remain supported but symlink/junction destinations are rejected. Current archive excludes empty directories and filesystem metadata; regular file bytes are the recovery contract. Keep trusted local ancestors and stop concurrent writers. These checks do not eliminate malicious path races, guarantee power-loss durability, or provide an atomic snapshot.
+
 Run `tracecascade verify-review-log LOG --policy POLICY` before applying decisions. If verification fails, preserve the damaged log for investigation and restore a known-good encrypted backup. Do not delete or rewrite individual lines because that invalidates the chain. A rejected edge is omitted only in a newly generated reviewed graph; the original graph is never mutated.
 
 ## Scale benchmark
