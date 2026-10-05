@@ -38,6 +38,24 @@ def encrypted_zip(path, entries):
 
 
 class RestoreBoundaryTests(unittest.TestCase):
+    def test_source_growth_before_reading_never_publishes_archive(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            project = root / "project"
+            project.mkdir()
+            source = project / "source"
+            source.write_bytes(b"123")
+            original = zipfile.ZipFile.open
+            def grow(archive, name, mode="r", *args, **kwargs):
+                if mode == "w":
+                    source.write_bytes(b"123456789")
+                return original(archive, name, mode, *args, **kwargs)
+            target = root / "backup.enc"
+            with patch("tracecascade.secure.zipfile.ZipFile.open", grow):
+                with self.assertRaisesRegex(ModelError, "source changed"):
+                    backup(project, target, PASSWORD)
+            self.assertFalse(target.exists())
+
     def test_entry_count_and_expansion_limits_are_preflighted(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -75,6 +75,8 @@ These are rankings of declared relations, not proof of causality. An incomplete 
 
 ## Review, audit and recovery
 
+v1.0.2 bounds source-copy reads to predeclared file size and checks file identity/size/mtime; rejects growing files before encrypted output publication. Traversal checks links/junctions before descending, instead of discovering them after recursive walking. Stop writers before backup: these guards still do not create an atomic directory snapshot.
+
 Review actions are `confirm`, `reject` and `expire`. A policy maps actors to roles and actions. Events are append-only JSONL with a SHA-256 chain; set `require_hmac: true` and provide `TRACECASCADE_AUDIT_KEY` to authenticate them. `apply-reviews` creates a new graph and requires the same policy used to verify the log.
 
 Encrypted backups use AES-256-GCM and scrypt. The password is read only from `TRACECASCADE_BACKUP_PASSWORD`. Unsafe paths, symlinks, oversized archives, nonempty restore targets and modified ciphertext are rejected.

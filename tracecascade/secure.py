@@ -48,6 +48,28 @@ def _preflight_names(names: list[str]) -> None:
             raise ModelError("Backup file is also a parent directory")
 
 
+def _source_files(root: Path):
+    stack = [root]
+    while stack:
+        directory = stack.pop()
+        for path in sorted(directory.iterdir()):
+            if path.name in {".git", "build", "dist", "__pycache__"}:
+                continue
+            if path.is_symlink() or path.is_junction():
+                raise ModelError("Backup refuses symbolic link or junction")
+            if path.is_dir():
+                stack.append(path)
+            elif path.is_file():
+                yield path
+            else:
+                raise ModelError("Backup refuses special source files")
+
+
+def _source_signature(info):
+    # Match stat/fstat's shared fields, not Windows-specific ctime semantics.
+    return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns
+
+
 def _key(password: str, salt: bytes) -> bytes:
     if len(password) < 12:
         raise ModelError("Backup password must be at least 12 characters")
@@ -64,21 +86,28 @@ def backup(root: Path, output: Path, password: str) -> dict:
     total, count = 0, 0
     archived_names = []
     with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
-        for path in sorted(root.rglob("*")):
+        for path in _source_files(root):
             relative = path.relative_to(root)
-            if any(part in {".git", "build", "dist", "__pycache__"} for part in relative.parts):
-                continue
-            if path.is_symlink() or path.is_junction():
-                raise ModelError(f"Backup refuses symbolic link or junction: {relative}")
-            if not path.is_file():
-                continue
             _archive_name(relative.as_posix())
-            size = path.stat().st_size
+            before = path.stat(follow_symlinks=False)
+            size = before.st_size
             total += size
             count += 1
             if total > MAX_BACKUP_BYTES or count > MAX_BACKUP_FILES:
                 raise ModelError(f"Backup exceeds {MAX_BACKUP_BYTES} uncompressed bytes")
-            archive.write(path, relative.as_posix())
+            written = 0
+            with archive.open(relative.as_posix(), "w") as target, path.open("rb") as source:
+                handle_before = os.fstat(source.fileno())
+                if _source_signature(handle_before) != _source_signature(before):
+                    raise ModelError("Backup source changed before reading")
+                while block := source.read(1024 * 1024):
+                    written += len(block)
+                    if written > size:
+                        raise ModelError("Backup source changed or grew beyond declared size")
+                    target.write(block)
+                if (written != size or _source_signature(os.fstat(source.fileno())) != _source_signature(handle_before)
+                        or _source_signature(path.stat(follow_symlinks=False)) != _source_signature(before)):
+                    raise ModelError("Backup source changed while reading")
             archived_names.append(relative.as_posix())
     _preflight_names(archived_names)
     salt, nonce = os.urandom(16), os.urandom(12)

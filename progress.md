@@ -6,6 +6,10 @@
 - Windows ZipInfo normalizes backslashes, so initial corrected run still missed that spelling: preserve raw test entry spelling and validate orig_filename. No unsafe fixture is taken from a user file.
 - Added entry-count/expansion and POSIX link tests; final cross-platform/package checks follow. Existing valid archive format remains version1; package1.0.1 does not promise atomic snapshots, malicious-race isolation or recovery of empty directories/metadata.
 
+## 2026-10-06 — v1.0.2 bounded source reads
+- Replace rglob with explicit traversal that checks links/junctions before descending. Bound each copied source to its predeclared size and compare stat/fstat identity/size/mtime; growing/changing sources fail before encrypted output publication.
+- Added a source-growth injection before file reading.33 tests on Windows32 passed/1 POSIX skipped; store format remains version1. Whole-directory atomic consistency and malicious metadata-preserving writes remain out of scope.
+
 ## 2026-09-30
 - Selected TraceCascade as the next flagship: an evidence-backed change-impact simulator.
 - Defined R0–R5 and R0 acceptance criteria. Implementation started; nothing beyond R0 is claimed complete.
