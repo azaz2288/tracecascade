@@ -65,6 +65,12 @@ Open the loopback URL printed by `serve-review`; it never binds to a public inte
 
 Every edge requires `from`, `to`, relation, `confirmed`/`inferred` status, confidence and evidence. Evidence paths are relative POSIX paths and cannot traverse upward or pass through symlinks. `verify-evidence` checks line ranges, quotes and optional SHA-256 digests; `simulate` refuses failed evidence.
 
+### Depth-bounded propagation (v1.0.3)
+
+`--max-depth N` limits evidence hops, not nodes visited. A shallower, weaker prefix must still be expanded even if a stronger path already reaches its middle node at the depth limit; otherwise downstream impact can be missed. v1.0.3 uses layered relaxation for explicitly bounded runs. Changed nodes are independent roots, not transit/report targets. At equal scores bounded mode prefers fewer hops, then lexicographic edge IDs and origin. With no `--max-depth`, the existing heap algorithm and edge-ID/origin tie rule are unchanged; equal-score report paths can therefore differ between the two modes even with a large explicit bound.
+
+An independent simple-path oracle checks240 synthetic six-node graphs at6 depths (1440 comparisons), plus targeted weak-prefix, cycles, parallel edges, multi-root, ordering and CLI regressions. Randomized scores are exactly representable powers of two; this does not establish extreme floating-point precision or real-world graph completeness. Large cyclic graphs may require many depth layers: worst-case bounded work scales with the depth limit and edges, and full evidence-path report size remains a separate cost. Local benchmark instructions: `python -m benchmarks.scale --nodes 10000 --max-depth 1` or `--nodes 500 --topology chain --max-depth 100`. Timings are observations, not performance SLAs.
+
 The engine chooses the strongest simple path from any changed node, multiplying edge confidence. Cycles terminate, depth is bounded and equal paths use stable edge-ID ordering:
 
 - `confirmed-impact`: every relation is confirmed and cumulative confidence is at least 0.8.

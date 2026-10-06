@@ -1,5 +1,11 @@
 # Progress
 
+## 2026-10-06 — v1.0.3 bounded impact propagation
+- Real counterexamples: maxdepth2 highscore2-hop a→x→b suppresses weaker1-hop a→b needed for b→c; maxdepth3 similar pattern missesd. New7 test methods failed72 assertions including oracle subtests and explicitly changed bounded tie policy before the fix. Layered relaxation preserves shallow alternatives, original unbounded heap unchanged.
+- Final43source tests Windows42pass/1POSIXskip and compile/diff checks passed; new corpus has240graphs×6depth=1440 independent simple-path comparisons with exact powers-of-two weights. Paths, evidence, classifications, origin, ordering, cycle simplicity and actual CLI JSON/Markdown/input preservation checked. Added single-node/invalid-depth/all-changed/legacy tie compatibility; root5maintenance tests passed. Installed-wheel validation and publication results recorded separately in root maintenance report, avoiding documentation-only SHA loops.
+- Benchmarks Python3.12.10 with tracemalloc on this machine: 10000fanout unbounded0.992s/13649190peakB; explicitdepth1fanout0.449s/14006704B; 500chain depth1000.063s/2648722B. No broad speedup/SLA or real-world graph accuracy claim. Worst-case bounded work scales with depth×edges, output-path size still matters.
+- Source package1.0.3/store format1; wheel fresh-env/isolatedsource-independent oracle+CLI/pipcheck and exactSHA publicremote/CI verification required. No browser/UI changes, no real auditlog/customer input, no paidAI, no other repo service/profile/Release changes. Remaining: extreme score numeric behavior, broader scale/resource limits, actual change-review cases and hosted deployment outsidev1 scope.
+
 ## 2026-10-06 — v1.0.1 encrypted recovery hardening
 - Crafted authenticated synthetic ZIPs reproduced17 failing boundary assertions and3 unhandled malformed-type errors across5 new methods before implementation. Encryption authentication does not make archive path data safe.
 - Strict raw ZIP names, portable paths, special modes, case collisions including directories and file-parent conflicts checked before destination creation. Envelope field types/salt/nonce lengths, file-count and expansion limits checked. Refuse symlink/junction source roots/entries and restore targets.

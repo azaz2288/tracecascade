@@ -19,9 +19,12 @@ jobs:
       - run: python -m pip install .
       - run: python -m unittest discover -s tests -v
       - run: python -m compileall -q tracecascade tests benchmarks
+      - run: python -m compileall -q tools
       - run: python -m tracecascade verify-evidence examples/customer-tier/graph.json
       - run: python -m tracecascade simulate examples/customer-tier/graph.json examples/customer-tier/scenario.json --json-out examples/customer-tier/out/report.json --markdown-out examples/customer-tier/out/report.md
       - run: python -m benchmarks.scale --nodes 10000
+      - run: python -m benchmarks.scale --nodes 10000 --max-depth 1
+      - run: python -m benchmarks.scale --nodes 500 --topology chain --max-depth 100
       - run: python -m pip wheel --no-deps --wheel-dir dist .
       - name: Install and smoke-test CLI
         shell: bash
@@ -30,3 +33,4 @@ jobs:
           cd "$RUNNER_TEMP"
           tracecascade --help
           python -c "import tracecascade; assert 'site-packages' in tracecascade.__file__"
+      - run: python -I tools/verify_installed.py

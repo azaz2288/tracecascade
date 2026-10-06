@@ -63,6 +63,43 @@ class _PathOrder:
         return (self.path.edge_ids(), self.path.origin) < (other.path.edge_ids(), other.path.origin)
 
 
+def _bounded_paths(outgoing: dict[str, list[Edge]], changed: set[str],
+                   depth_limit: int) -> dict[str, _Path]:
+    """Layered relaxation: shallow weak prefixes must still be expanded.
+
+    At each exact depth only the best score/edge-ID/origin prefix is needed.
+    A previous (strictly shallower) score at least as strong dominates a new
+    one. Positive edge weights <= 1 make cycles dominated by their prefix,
+    including unit-weight cycles, so selected output paths remain simple.
+    Equal scores prefer fewer hops, then edge IDs and origin. This bounded
+    tie rule deliberately differs from the legacy unbounded heap rule.
+    """
+    frontier = {node: _Path(1.0, None, None, node, node) for node in sorted(changed)}
+    best = dict(frontier)
+    for _ in range(depth_limit):
+        following: dict[str, _Path] = {}
+        for current, path in frontier.items():
+            for edge in outgoing[current]:
+                if edge.target in changed:
+                    continue
+                candidate = _Path(path.score * edge.confidence, path, edge, path.origin, edge.target)
+                earlier = best.get(edge.target)
+                if earlier is not None and earlier.score >= candidate.score:
+                    continue
+                incumbent = following.get(edge.target)
+                if (incumbent is None or candidate.score > incumbent.score
+                        or (candidate.score == incumbent.score
+                            and _PathOrder(candidate) < _PathOrder(incumbent))):
+                    following[edge.target] = candidate
+        if not following:
+            break
+        # Do not update best within a layer: every comparison above must be
+        # against strictly shallower paths, independent of edge/input order.
+        best.update(following)
+        frontier = following
+    return best
+
+
 def simulate(graph: Graph, scenario: Scenario, max_depth: int | None = None) -> dict[str, Any]:
     """Find the strongest explainable path from any changed node to every reachable node."""
     if max_depth is not None and (type(max_depth) is not int or max_depth < 0):
@@ -77,9 +114,12 @@ def simulate(graph: Graph, scenario: Scenario, max_depth: int | None = None) -> 
     best: dict[str, _Path] = {}
     queue: list[tuple[float, _PathOrder, str, _Path]] = []
     changed = {change.node for change in scenario.changes}
+    if max_depth is not None:
+        best = _bounded_paths(outgoing, changed, depth_limit)
     for change in sorted(scenario.changes, key=lambda item: item.node):
         path = _Path(1.0, None, None, change.node, change.node)
-        heapq.heappush(queue, (-1.0, _PathOrder(path), change.node, path))
+        if max_depth is None:
+            heapq.heappush(queue, (-1.0, _PathOrder(path), change.node, path))
     while queue:
         _, _, current, path = heapq.heappop(queue)
         if current in best:

@@ -1,5 +1,11 @@
 # TraceCascade working plan
 
+## 2026-10-06 v1.0.3 bounded propagation correctness
+- Failing synthetic maxdepth2 case missedc, maxdepth3 case missedd; first7methods72failures including oracle subtests/new bounded tie rule. Implemented layered relaxation retaining shallower weaker prefixes; dominance checks compare only earlier depths, not within same layer. No-bound heap behavior is untouched.
+- Added independent240graph×6depth simple-path oracle, ordering/cycles/parallel/multi-root, exact evidence/classification/selected path and real CLI reports. Initial corrected40source tests Windows39pass/1POSIXskip; expanded boundary regression and final wheel/CI underway.
+- Usable v1.0.3 correction, not new hosted product or generic safety proof. Explicit bounded score ties now prefer shorter then edgeID/origin, documented. Benchmark under tracemalloc: unbounded10k fanout0.992s/13649190B; depth1fanout0.449s/14006704B; 500chain/depth1000.063s/2648722B; observations on this machine, not SLA.
+- Required: finalsource/compile, fresh wheel site-packages/isolated oracle+CLI/pipcheck, secret index scan, commit/push/remote exactSHA, sameSHA two-platform CI and maintenance evidence. No real logs/private data/UI/services touched; UI did not change, so no browser behavior claims.
+
 ## Goal
 Build a local-first change-impact simulator that turns evidence-backed dependency graphs into explainable, auditable what-if reports.
 

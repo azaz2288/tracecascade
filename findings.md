@@ -1,5 +1,7 @@
 # Findings
 
+v1.0.3: single-settled-node heap labels can miss reachable descendants with a hop bound; highscore deep prefix cannot dominate lowscore shallow prefix because remaining hop budgets differ. Layered relaxation retains these alternatives, prunes only when a strictly shallower prefix has at least the score, and updates best after each whole layer. Unit-weight cycles are dominated by shorter prefixes; explicit bound picks shortest equal-score path before edgeIDs/origin, without changing legacy unbounded tie semantics.240small synthetic graphs×6depth independent simple-path enumeration passed after a real first72failures (not72 distinct bugs); powers-of-two scores are not an extreme floating-point oracle. Installation verification uses source-independent-I imports and actual installed CLI, never fallback to old installed package. Benchmarks remain topology/depth-specific observations.
+
 - Most knowledge tools answer retrieval questions; TraceCascade focuses on prospective change impact across heterogeneous artifacts.
 - Real dependency graphs can contain cycles, so rejecting all cycles would hide valid mutual dependencies. Propagation must be cycle-safe and bounded instead.
 - An influence score alone is not explainable. A report needs the selected path, relation types, evidence quotes and confidence/status for every hop.

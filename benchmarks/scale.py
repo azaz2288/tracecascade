@@ -17,9 +17,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--nodes", type=int, default=10_000)
     parser.add_argument("--topology", choices=("fanout", "chain"), default="fanout")
+    parser.add_argument("--max-depth", type=int)
     args = parser.parse_args()
     if not 2 <= args.nodes <= 100_000:
         parser.error("--nodes must be from 2 to 100,000")
+    if args.max_depth is not None and args.max_depth < 0:
+        parser.error("--max-depth must be nonnegative")
     with tempfile.TemporaryDirectory(prefix="tracecascade-benchmark-") as temporary:
         root = Path(temporary)
         evidence = root / "evidence.md"
@@ -43,14 +46,18 @@ def main() -> None:
         loaded_scenario = load_scenario(scenario_path, loaded)
         tracemalloc.start()
         started = time.perf_counter()
-        result = simulate(loaded, loaded_scenario)
+        result = simulate(loaded, loaded_scenario, max_depth=args.max_depth)
         seconds = time.perf_counter() - started
         _, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         print(json.dumps({"topology": args.topology, "nodes": args.nodes, "edges": args.nodes - 1,
+                          "max_depth": args.max_depth,
                           "affected": result["summary"]["affected_nodes"],
                           "seconds": round(seconds, 3), "peak_python_bytes": peak}, indent=2))
-        if result["summary"]["affected_nodes"] != args.nodes - 1:
+        expected = args.nodes - 1
+        if args.max_depth is not None:
+            expected = min(expected, args.max_depth) if args.topology == 'chain' else expected if args.max_depth else 0
+        if result["summary"]["affected_nodes"] != expected:
             raise SystemExit(1)
 
 
