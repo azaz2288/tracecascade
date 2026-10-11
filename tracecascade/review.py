@@ -34,9 +34,10 @@ def _lock(path: Path, timeout: float = 5.0) -> Iterator[None]:
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with lock_path.open("a+b") as stream:
-            if stream.tell() == 0:
-                stream.write(b"\0")
-                stream.flush()
+            # Windows permits locking a byte beyond EOF. Do not initialize the
+            # sentinel: a concurrent holder can already own byte zero while
+            # this stream still observes an empty file. Keep the same inode and
+            # fixed offset for both empty sentinels and legacy nonempty ones.
             deadline = time.monotonic() + timeout
             while True:
                 try:

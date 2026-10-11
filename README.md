@@ -81,6 +81,8 @@ These are rankings of declared relations, not proof of causality. An incomplete 
 
 ## Review, audit and recovery
 
+v1.0.4 fixes concurrent initialization of Windows audit locks. Every writer locks the same persistent `.lock` file at byte zero without first writing a sentinel; Windows supports locking beyond EOF. Empty and legacy nonempty sentinels work unchanged on Windows/POSIX. Never delete a lock file while writers are active: that can split lock identity. Six synthetic regressions include a real competing zero-length lock, killed-holder recovery, four independent processes producing a32-event HMAC chain, exception release and failed-fsync behavior. These checks do not guarantee distributed/NFS locking, malicious path-race isolation or atomic append rollback. A failed write/fsync may leave bytes; preserve and verify the log before retrying.
+
 v1.0.2 bounds source-copy reads to predeclared file size and checks file identity/size/mtime; rejects growing files before encrypted output publication. Traversal checks links/junctions before descending, instead of discovering them after recursive walking. Stop writers before backup: these guards still do not create an atomic directory snapshot.
 
 Review actions are `confirm`, `reject` and `expire`. A policy maps actors to roles and actions. Events are append-only JSONL with a SHA-256 chain; set `require_hmac: true` and provide `TRACECASCADE_AUDIT_KEY` to authenticate them. `apply-reviews` creates a new graph and requires the same policy used to verify the log.

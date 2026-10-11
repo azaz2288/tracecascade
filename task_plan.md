@@ -1,5 +1,9 @@
 # TraceCascade working plan
 
+## 2026-10-11 v1.0.4 lock correction (local acceptance complete; publication evidence external)
+- Exact Windows failure in manual maintenance: pre-lock sentinel write/flush conflicts with byte zero already held while the file is empty.5 new old-code methods3fail/1error; changed fixture cleanup to reap independent holder before temporary cleanup.
+- Remove initialization bytes; lock stable offset0 even beyond EOF, preserve legacy sentinel and never unlink.6 targeted regressions passed; full49 Windows48pass1skip/compile and fresh1.0.4 wheel site-packages10oracle+6process/CLI/pipcheck verified. Next index scan→commit/push/fullSHA current Windows/Linux CI→root18 final; fullSHA/CI saved root manual report. No actual/private logs, UI/services or paid API. Do not call distributed locking/append rollback solved.
+
 ## 2026-10-06 v1.0.3 bounded propagation correctness
 - Failing synthetic maxdepth2 case missedc, maxdepth3 case missedd; first7methods72failures including oracle subtests/new bounded tie rule. Implemented layered relaxation retaining shallower weaker prefixes; dominance checks compare only earlier depths, not within same layer. No-bound heap behavior is untouched.
 - Added independent240graph×6depth simple-path oracle, ordering/cycles/parallel/multi-root, exact evidence/classification/selected path and real CLI reports. Initial corrected40source tests Windows39pass/1POSIXskip; expanded boundary regression and final wheel/CI underway.
